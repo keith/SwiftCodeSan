@@ -173,6 +173,7 @@ class Executor {
     /// - parameter arguments: The command line arguments to execute the command with.
 
     func execute(with arguments: ArgumentParser.Result) {
+        print("first")
 
         minLogLevel = arguments.get(self.loggingLevel) ?? 0
 
@@ -199,15 +200,24 @@ class Executor {
         let thresholdDays = arguments.get(self.thresholdDays)
 
         let deps = arguments.get(self.fileLists) ?? []
-        let syslibs = arguments.get(self.syslibLists) ?? []
+        let syslibs2 = arguments.get(self.syslibLists) ?? []
+        let syslibs = try! String(contentsOfFile: syslibs2.first!).split(whereSeparator: \.isNewline).map(String.init)
+
+        var deps2 = [String]()
+        for file in deps {
+            let contents: [String] = try! String(contentsOfFile: file).split(whereSeparator: \.isNewline).map(String.init)
+            deps2.append(contentsOf: contents)
+        }
 
         var filesToModules = [String: String]()
-        deps.forEach { arg in
+        deps2.forEach { arg in
             let line = arg.components(separatedBy: ":")
             if let key = line.first, let val = line.last {
                 filesToModules[key] = val
             }
         }
+
+        print("here", filesToModules)
         
         let whitelist = Whitelist(thresholdDays: thresholdDays,
                                   decls: whitelistDecls,
